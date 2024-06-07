@@ -24,10 +24,10 @@ namespace VehicleImport.Models
 
                 for (int j = 0; j < headers.Length; j++)
                 {
-                    string property = headers[j];
-                    if (property != null)
+                    string columnName = headers[j];
+                    if (columnName != null)
                     {
-                        entry.ColumnData.Add(property, values[j]);
+                        entry.ColumnData.Add(columnName, values[j]);
                     }
                 }
 
@@ -37,37 +37,41 @@ namespace VehicleImport.Models
             return entries;
         }
 
-        public Dictionary<string, string> LoadDataFromExcel(string filePath)
+        public List<VehicleModel> LoadDataFromExcel(string filePath)
         {
-            var result = new Dictionary<string, string>();
+            List<VehicleModel> entries = new List<VehicleModel>();
 
-            using (var package = new ExcelPackage(new FileInfo(filePath)))
+            using (ExcelPackage package = new ExcelPackage(new FileInfo(filePath)))
             {
                 ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming you're reading the first sheet
 
                 // Read the header row (column names)
-                var headerRow = worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column];
-                var columnNames = new List<string>();
-                foreach (var cell in headerRow)
+                ExcelRange headerRow = worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column];
+                List<string> headerNames = new List<string>();
+                foreach (ExcelRangeBase cell in headerRow)
                 {
-                    columnNames.Add(cell.Text);
+                    headerNames.Add(cell.Text);
                 }
 
                 // Read data rows
-                for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+                for (int rowNumber = 2; rowNumber <= worksheet.Dimension.End.Row; rowNumber++)
                 {
-                    for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
+                    VehicleModel entry = new VehicleModel();
+
+                    for (int colNumber = 1; colNumber <= worksheet.Dimension.End.Column; colNumber++)
                     {
-                        var columnName = columnNames[col - 1];
-                        var cellValue = worksheet.Cells[row, col].Text;
+                        string columnName = headerNames[colNumber - 1];
+                        string cellValue = !string.IsNullOrWhiteSpace(worksheet.Cells[rowNumber, colNumber].Text) ? worksheet.Cells[rowNumber, colNumber].Text : string.Empty;
 
                         // Add to the dictionary
-                        result[columnName] = cellValue;
+                        entry.ColumnData.Add(columnName, cellValue);
                     }
+
+                    entries.Add(entry);
                 }
             }
 
-            return result;
+            return entries;
         }
     }
 }
