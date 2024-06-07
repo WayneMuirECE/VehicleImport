@@ -22,6 +22,7 @@
             get { return ColumnData.ContainsKey("CITY") ? ColumnData["CITY"] : string.Empty; }
             set { ColumnData["CITY"] = value; }
         }
+        public bool CityNameChanged { get; set; } = false;
         public DateTime DateTimeAdded { get; private set; }
         public string MakeModel
         {

@@ -1,20 +1,49 @@
 ﻿using OfficeOpenXml;
+using System.Collections.Generic;
 
 namespace VehicleImport.Models
 {
     public class ImportVehicleByFileType
     {
-        public static List<VehicleModel> LoadDataFromCsvOrPsv(string filePath, List<string> errorMessages)
+        public List<VehicleModel> LoadData(string filePath, List<string> errorMessages)
+        {
+            List<VehicleModel> result = new List<VehicleModel>();
+            string fileExtension = Path.GetExtension(filePath).ToLower();
+
+            switch (fileExtension)
+            {
+                case ".csv":
+                case ".psv":
+                case ".txt":
+                    result = LoadDataFromCsvOrPsv(filePath, errorMessages);
+                    break;
+                case ".xls":
+                case ".xlsx":
+                    result = LoadDataFromExcel(filePath);
+                    break;
+                default:
+                    throw new ArgumentException("Unsupported file format.");
+            }
+
+            return result;
+        }
+
+        private List<VehicleModel> LoadDataFromCsvOrPsv(string filePath, List<string> errorMessages)
         {
             List<VehicleModel> entries = new List<VehicleModel>();
             string[] lines = File.ReadAllLines(filePath);
             StringSplitter splitter = new StringSplitter();
             string[] headers = splitter.SplitStringByDelimiter(lines[0]);
 
+            for(int i = 0; i < headers.Length; i++)
+            {
+                headers[i] = headers[i].ToUpper();
+            }
+
             for (int i = 1; i < lines.Length; i++)
             {
                 string[] values = splitter.SplitStringByDelimiter(lines[i]);
-                if (values[i].Length != headers.Length)
+                if (values.Length != headers.Length)
                 {
                     errorMessages.Add("This line does not contain all the columns for the header: " + lines[i]);
                     continue;
@@ -27,6 +56,13 @@ namespace VehicleImport.Models
                     string columnName = headers[j];
                     if (columnName != null)
                     {
+                        if (columnName == "CITY")
+                        {
+                            bool changed = false;
+                            values[j] = ReplaceAsteriskWithDot(values[j], out changed);
+                            entry.CityNameChanged = changed;
+                        }
+
                         entry.ColumnData.Add(columnName, values[j]);
                     }
                 }
@@ -37,7 +73,7 @@ namespace VehicleImport.Models
             return entries;
         }
 
-        public List<VehicleModel> LoadDataFromExcel(string filePath)
+        private List<VehicleModel> LoadDataFromExcel(string filePath)
         {
             List<VehicleModel> entries = new List<VehicleModel>();
 
@@ -50,7 +86,7 @@ namespace VehicleImport.Models
                 List<string> headerNames = new List<string>();
                 foreach (ExcelRangeBase cell in headerRow)
                 {
-                    headerNames.Add(cell.Text);
+                    headerNames.Add(cell.Text.ToUpper());
                 }
 
                 // Read data rows
@@ -63,6 +99,13 @@ namespace VehicleImport.Models
                         string columnName = headerNames[colNumber - 1];
                         string cellValue = !string.IsNullOrWhiteSpace(worksheet.Cells[rowNumber, colNumber].Text) ? worksheet.Cells[rowNumber, colNumber].Text : string.Empty;
 
+                        if (columnName == "CITY")
+                        {
+                            bool changed = false;
+                            cellValue = ReplaceAsteriskWithDot(cellValue, out changed);
+                            entry.CityNameChanged = changed;
+                        }
+
                         // Add to the dictionary
                         entry.ColumnData.Add(columnName, cellValue);
                     }
@@ -72,6 +115,21 @@ namespace VehicleImport.Models
             }
 
             return entries;
+        }
+
+        private string ReplaceAsteriskWithDot(string value, out bool changed)
+        {
+            if (value.Contains('*'))
+            {
+                value = value.Replace('*', '.');
+                changed = true;
+            }
+            else
+            {
+                changed = false;
+            }
+
+            return value;
         }
     }
 }
