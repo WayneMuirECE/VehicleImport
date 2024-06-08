@@ -52,6 +52,7 @@
             set { ColumnData["MODEL"] = value; }
         }
 
+        // Contains all the data from the file
         public Dictionary<string, string> ColumnData { get; set; } = new Dictionary<string, string>();
     }
 }

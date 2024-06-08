@@ -79,7 +79,7 @@ namespace VehicleImport.Models
 
             using (ExcelPackage package = new ExcelPackage(new FileInfo(filePath)))
             {
-                ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming you're reading the first sheet
+                ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Reading the first sheet
 
                 // Read the header row (column names)
                 ExcelRange headerRow = worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column];
@@ -106,7 +106,7 @@ namespace VehicleImport.Models
                             entry.CityNameChanged = changed;
                         }
 
-                        // Add to the dictionary
+                        // Add to the list
                         entry.ColumnData.Add(columnName, cellValue);
                     }
 

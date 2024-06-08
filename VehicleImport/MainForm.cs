@@ -22,7 +22,7 @@ namespace VehicleImport
                 // Get the path of specified file
                 string filePath = openFileDialog1.FileName;
 
-                // Call the ReadFileToDictionary method
+                // Call the LoadData method
                 ImportVehicleByFileType fileReader = new ImportVehicleByFileType();
                 List<string> errorMessages = new List<string>();
                 List<VehicleModel> vehicleList = fileReader.LoadData(filePath, errorMessages);
