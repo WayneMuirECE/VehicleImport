@@ -1,3 +1,3 @@
 # VehicleImport
 
-A simple app to import records
+A simple app to import vehicle records.
